@@ -20,9 +20,18 @@ services:
 # database data between container restarts. The `db-password` secret is used
 # to set the database password. You must create `db/password.txt` and add
 # a password of your choosing to it before running `docker-compose up`.
-#     depends_on:
-#       db:
-#         condition: service_healthy
+    depends_on:
+      db:
+        condition: service_healthy
+    secrets:
+      - db-password
+    environment:
+      - PASSWORD_FILE_PATH=/run/secrets/db-password
+      - DB_HOST=db
+      - DB_NAME=example
+      - DB_USER=root
+
+### Trocar todo o db do postgresql para o db do mariadb
 #   db:
 #     image: postgres
 #     restart: always
@@ -41,9 +50,35 @@ services:
 #       interval: 10s
 #       timeout: 5s
 #       retries: 5
-# volumes:
-#   db-data:
-# secrets:
-#   db-password:
-#     file: db/password.txt
+  db:
+    image: mariadb
+    restart: always
+    user: root
+    secrets:
+      - db-password
+    volumes:
+      - db-data:/var/lib/mysql
+    environment:
+      - MARIADB_ROOT_PASSWORD_FILE=/run/secrets/db-password
+      - MARIADB_DATABASE=example
+    expose:
+      - 3306
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "/usr/local/bin/healthcheck.sh",
+          "--su-mysql",
+          "--connect",
+          "--innodb_initialized",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db-data:
+secrets:
+  db-password:
+    file: db/password.txt
 
