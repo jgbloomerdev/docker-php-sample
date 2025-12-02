@@ -30,6 +30,11 @@ services:
       - DB_HOST=db
       - DB_NAME=example
       - DB_USER=root
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /var/www/html
 
 ### Trocar todo o db do postgresql para o db do mariadb
 #   db:
